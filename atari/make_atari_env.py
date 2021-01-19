@@ -9,6 +9,7 @@ import numpy as np
 import random
 import torch
 import glob
+import bisect 
 
 def make_atari_env(env_id, rho=0.1, phi=0.3, demo_dir= '', size_buffer=50, size_buffer_V=50, base_seed=0, log_dir=None, frame_skip=0, frame_stack=1, allow_early_resets=False, info_keywords = ('ereward'), threshold_reward=None, test=False):
 
@@ -23,12 +24,13 @@ def make_atari_env(env_id, rho=0.1, phi=0.3, demo_dir= '', size_buffer=50, size_
             
             env.seed(index_worker + rank) if base_seed is None else env.seed(
                 base_seed + rank)
-            
+            # WARNING
+           
             env = wrap_deepmind(
                 env, episode_life=True if not test else False,
                 clip_rewards=True if not test else False,
                 scale=False)
-            
+            #env = TruncateAtari(env, threshold_reward)
             env = AtariReplayRecord(env,rho, phi, demo_dir, size_buffer, size_buffer_V, threshold_reward)
             
             if log_dir is not None:
@@ -49,6 +51,31 @@ def make_atari_env(env_id, rho=0.1, phi=0.3, demo_dir= '', size_buffer=50, size_
 
     return make_env
 
+class TruncateAtari(gym.Wrapper):
+    def __init__(self, env, threshold_reward):
+        gym.Wrapper.__init__(self, env)
+        self.sum_reward = 0
+        self.threshold_reward = threshold_reward
+
+
+    def step(self, action):
+
+        #action, other = action
+        obs, reward, done, info = self.env.step(action)
+        self.sum_reward += reward
+        #print(self.sum_reward)
+        if self.sum_reward >= self.threshold_reward:
+            self.sum_reward = 0
+            done = True
+            obs =  obs = self.env.reset()
+            
+            
+
+        return obs, reward, done, info        
+
+    def reset(self, **kwargs):
+        self.sum_reward = 0
+        return self.env.reset(**kwargs)
 
 
 class ReplayAll():
@@ -78,6 +105,8 @@ class ReplayAll():
         self.mean_value = 0
         self.index_min = None
         self.deleted_index = []
+        self.sum_reward = 0
+        self.recordings_reward_sum = []
 
 
 
@@ -88,12 +117,15 @@ class ReplayAll():
                 act = self.acts[self.step]
                 obs = self.obs[self.step]
                 reward = self.rews[self.step]
+                self.sum_reward  += self.rews[self.step]
                 if self.value_list_index:
                     if self.value_list_index not in self.deleted_index:
                         self.recordings_value[self.value_list_index]["values"][self.step] = value
 
-                if self.step == (self.num_steps -1):
+                if self.step == (self.num_steps -1) or self.sum_reward >= 10:
                     done = True
+                    self.sum_reward = 0
+                    
                     if self.value_list_index:
                         self.new_max_value= np.max(self.recordings_value[self.value_list_index]["values"])
                         self.max_value_error = self.new_max_value - self.old_max_value
@@ -122,7 +154,7 @@ class ReplayAll():
     def reset(self):
         #print(self.max_value, "MAX VALUE")
 #         print(len(self.recordings_value), "LEN VALUE BUFFER")
-#         print(len(self.recordings), "LEN VALUE BUFFER")
+        print(len(self.recordings), "LEN REWARD BUFFER")
         
         rho = self.rho
         phi = self.phi
@@ -189,30 +221,37 @@ class ReplayAll():
         return self.replay
     
         
-    def add_demo(self,demo):
-
-        self.recordings.insert(self.n_original_demos,demo)
-
-        if len(self.recordings) >  self.size_R_buffer:
-            self.recordings.pop()
+    def add_demo(self,demo, sum_rewards):
+        insert_index = bisect.bisect(self.recordings_reward_sum, sum_rewards)
+        
+        self.recordings.insert(self.n_original_demos + insert_index,demo)
+        self.recordings_reward_sum.insert(insert_index, sum_rewards)
             
+#         print(sum_rewards, insert_index)
         
-        if self.size_V_buffer > 0:
-            self.rho = self.rho + self.phi_/self.size_buffer
-            self.phi = self.phi - self.phi_/self.size_buffer
-            self.size_V_buffer = self.size_V_buffer - 1
+        if len(self.recordings) >  self.size_R_buffer:
+            self.recordings.pop(self.n_original_demos)
+            self.recordings_reward_sum.pop(0)
+
+#         print('before:', sum(self.recordings[0]['rewards']),'after:' , sum(self.recordings[1]['rewards']))
+#         print(self.recordings_reward_sum)
+        
+#         if self.size_V_buffer > 0:
+#             self.rho = self.rho + self.phi_/self.size_buffer
+#             self.phi = self.phi - self.phi_/self.size_buffer
+#             self.size_V_buffer = self.size_V_buffer - 1
         
 
-        if (len(self.recordings_value) >=  self.size_V_buffer) and len(self.recordings_value) > 0:
-            max_trajectory_value = np.array([ np.max(record['values']) for record in self.recordings_value])
-            self.ps_ = max_trajectory_value
-            self.min_value = np.min(self.ps_ )
-            self.index_min = np.argmin(self.ps_)
-            self.recordings_value.pop(self.index_min)
-            self.deleted_index.append(self.index_min)
-            if self.value_list_index:
-                if self.value_list_index > self.index_min:
-                    self.value_list_index -= 1
+#         if (len(self.recordings_value) >=  self.size_V_buffer) and len(self.recordings_value) > 0:
+#             max_trajectory_value = np.array([ np.max(record['values']) for record in self.recordings_value])
+#             self.ps_ = max_trajectory_value
+#             self.min_value = np.min(self.ps_ )
+#             self.index_min = np.argmin(self.ps_)
+#             self.recordings_value.pop(self.index_min)
+#             self.deleted_index.append(self.index_min)
+#             if self.value_list_index:
+#                 if self.value_list_index > self.index_min:
+#                     self.value_list_index -= 1
              
              
 
@@ -257,6 +296,7 @@ class AtariReplayRecord(gym.Wrapper):
         info = {}
         if len(out) == 1:
             obs, reward, done, info = self.env.step(action)
+            obs[0:7,:,:] = 0
             self.obs_rollouts.append(obs)
             self.rews_rollouts.append(reward)
             self.actions_rollouts.append(action)
@@ -265,14 +305,17 @@ class AtariReplayRecord(gym.Wrapper):
 #             if reward < 0:
 #                 reward = 0
 
-            self.env_reward += reward
             self.env_reward_no_D += reward
-    
+            self.env_reward += reward
+
+            
             if self.threshold_reward:
                 if self.env_reward < self.threshold_reward:
-                    reward = 0
-#                 else:
-#                     reward = self.env_reward
+                    reward_ = 0
+                else:
+                    reward_ = 50
+            else:
+                reward_ = reward
             
             
             self.len_real +=1
@@ -285,15 +328,20 @@ class AtariReplayRecord(gym.Wrapper):
             info['max_value_error'] = 0.0
         else:
             action, obs, reward, done = out
-           
+            obs[0:7,:,:] = 0
+            
             self.env_reward += reward
+
             if self.threshold_reward:
                 if self.env_reward < self.threshold_reward:
-                    reward = 0    
-#                 else:
-#                     reward = self.env_reward
-                
-        
+                    reward_ = 0    
+                else:
+                    reward_ = 50
+            else:
+                reward_ = reward
+
+             
+            #print(self.env_reward)
             info['action'] = action
             info['true_action'] = True
             info['rr'] = 0
@@ -327,7 +375,7 @@ class AtariReplayRecord(gym.Wrapper):
         for demo_in_ in info_in["demo_in"]:
 
             if len(demo_in_)> 0:
-                self.replayer.add_demo(demo_in_)
+                self.replayer.add_demo(demo_in_, sum(demo_in_['rewards']))
 
         
         if self.demo_value:
@@ -343,7 +391,7 @@ class AtariReplayRecord(gym.Wrapper):
                 self.replayer.add_demo_value(demo_in_value_)
                 
                 
-        return obs, reward, done, info
+        return obs, reward_, done, info
 
     def reset(self, **kwargs):
         
@@ -356,10 +404,10 @@ class AtariReplayRecord(gym.Wrapper):
         if self.threshold_reward:
             threshold = self.threshold_reward
         else:
-            threshold = 1000
+            threshold = 50
             
-
-        if (len (self.actions_rollouts) > 0) and (sum(self.rews_rollouts) > threshold):
+        sum_rews_rollouts = sum(self.rews_rollouts)
+        if (len (self.actions_rollouts) > 0) and (sum_rews_rollouts >= 0):
             
             self.demo = {'observations':np.array(self.obs_rollouts),
                             'rewards':np.array(self.rews_rollouts),
@@ -383,7 +431,7 @@ class AtariReplayRecord(gym.Wrapper):
         replay = self.replayer.reset()
 
         if self.demo:
-            self.replayer.add_demo(self.demo)
+            self.replayer.add_demo(self.demo, sum_rews_rollouts)
         
         if self.demo_value:
             self.replayer.add_demo_value(self.demo_value)
