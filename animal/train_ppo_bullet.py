@@ -79,7 +79,7 @@ def main():
             actor_behaviors.append(actor) 
 
     agent = algo.PPOKL(actor_critic,args.clip_param,args.ppo_epoch, args.num_mini_batch,args.value_loss_coef,
-            args.entropy_coef,lr=args.lr,eps=args.eps,max_grad_norm=args.max_grad_norm,actor_behaviors=actor_behaviors,  log_dir= args.log_dir, behaviour_cloning = args.behaviour_cloning)
+            args.entropy_coef,lr=args.lr,eps=args.eps,max_grad_norm=args.max_grad_norm,actor_behaviors=actor_behaviors,  log_dir= args.log_dir, behaviour_cloning = args.behaviour_cloning, ppo_bc = args.ppo_bc)
 
     obs = envs.reset()
     rollouts = RolloutStorage(args.num_steps, args.num_processes,
@@ -202,8 +202,8 @@ def get_args():
         '--threshold-reward',type=float,default=None,help='clips the reward under a certain threshold to zero')
     parser.add_argument(
         '--behaviour-cloning', action='store_true',default=False ,help='Adds a behavioural cloning loss')
-    
-    
+    parser.add_argument(
+        '--ppo-bc', action='store_true',default=False ,help='Alternates between bc and normal PPO')
     
     args = parser.parse_args()
     args.log_dir = os.path.expanduser(args.log_dir)
