@@ -45,6 +45,7 @@ class PPOKL():
                  actor_behaviors=None,
                  vanilla = None,
                  behaviour_cloning = None,
+                 ppo_bc = None,
                  test = None,
                  log_dir = ''):
 
@@ -71,6 +72,7 @@ class PPOKL():
        
         self.vanilla = vanilla
         self.behaviour_cloning = behaviour_cloning
+        self.ppo_bc = ppo_bc
         self.impala = False
         self.test = test
         self.loss_writer = LossWriter(log_dir, fieldnames = ('BC_loss', 'V_loss', 'action_loss', 'gail_loss', 'entropy'))
@@ -121,11 +123,33 @@ class PPOKL():
                 # Reshape to do in a single forward pass for all steps
                 values, action_log_probs, dist_entropy, _, dist_a = self.actor_critic.evaluate_actions(
                     obs_batch, recurrent_hidden_states_batch, masks_batch,actions_batch)
+            
+                if self.actor_critic.continous:
+                    _, action_ppo_bc, _, _, _ = self.actor_critic.act(
+                    obs_batch, recurrent_hidden_states_batch, masks_batch)
+                    action_ppo_bc = action_ppo_bc[is_demo_batch.squeeze(1) == 1, :]
 
-                ratio = torch.exp(action_log_probs - old_action_log_probs_batch)
-                surr1 = ratio * adv_targ
-                surr2 = torch.clamp(ratio, 1.0 - self.clip_param,
-                                    1.0 + self.clip_param) * adv_targ
+                if self.ppo_bc:
+                    
+                    ratio = torch.exp(action_log_probs[is_demo_batch == 0] - old_action_log_probs_batch[is_demo_batch == 0])
+                    surr1 = ratio * adv_targ[is_demo_batch == 0]
+                    surr2 = torch.clamp(ratio, 1.0 - self.clip_param,
+                                        1.0 + self.clip_param) * adv_targ[is_demo_batch == 0]
+                    action_loss = -torch.min(surr1, surr2).mean()
+                    
+                    
+                else:
+                    ratio = torch.exp(action_log_probs - old_action_log_probs_batch)
+                    surr1 = ratio * adv_targ
+                    surr2 = torch.clamp(ratio, 1.0 - self.clip_param,
+                                        1.0 + self.clip_param) * adv_targ
+
+                    if self.vanilla:
+                        #action_loss = -surr1.mean()
+                        surr1 = ratio*adv_targ
+                        action_loss = -surr1.mean()
+                    else:
+                        action_loss = -torch.min(surr1, surr2).mean()
                 
                 if self.vanilla:
                     #action_loss = -surr1.mean()
@@ -150,23 +174,35 @@ class PPOKL():
 
                 
                 # behavioural cloning loss
-                if self.behaviour_cloning:
-                    loss = nn.CrossEntropyLoss()
-                    actions_prob = self.actor_critic.actions_prob(obs_batch, recurrent_hidden_states_batch, masks_batch,actions_batch)
-                    actions_prob_demo = actions_prob[(is_demo_batch == 1).squeeze()]
-                    actions_batch_demo = actions_batch[is_demo_batch == 1]
+                if self.behaviour_cloning or self.ppo_bc:
+                    loss = nn.MSELoss()
+                    if not self.actor_critic.continous:
+                        loss = nn.CrossEntropyLoss()
+                        
+                        actions_prob = self.actor_critic.actions_prob(obs_batch, recurrent_hidden_states_batch, masks_batch,actions_batch)
+                        actions_prob_demo = actions_prob[(is_demo_batch == 1).squeeze()]
+                        
+                    actions_batch_demo = actions_batch[is_demo_batch.squeeze(1) == 1, :]
+                    #actions_batch_demo = actions_batch[is_demo_batch == 1]
                     
-                    if actions_batch_demo.shape[0] != 0:
-                        BC_loss = loss(actions_prob_demo,actions_batch_demo.view(-1))
+                    if not self.actor_critic.continous:
+                        
+                        if actions_batch_demo.shape[0] != 0:
+                            BC_loss = loss(actions_prob_demo,actions_batch_demo.view(-1))
+                        else:
+                            BC_loss = 0
                     else:
-                        BC_loss = 0
-                else:
-                    BC_loss = 0 
-                   
-
-                
+                        if actions_batch_demo.shape[0] != 0:
+                            BC_loss = loss(action_ppo_bc, actions_batch_demo)
+                        else:
+                            BC_loss = 0
+              
                 if self.behaviour_cloning:
                     loss = BC_loss + value_loss * self.value_loss_coef
+                    
+                elif self.ppo_bc:
+                    loss = value_loss * self.value_loss_coef + action_loss + BC_loss
+                    
                 else:
                     loss = value_loss * self.value_loss_coef + action_loss
                 
@@ -275,7 +311,11 @@ def ppo_rollout_imitate(num_steps, envs, actor_critic, rollouts, infos_in):
             for ii,info in enumerate(infos):
 #                 print(info['true_action'])
                 if info['true_action']:
-                    action[ii] =  int(info['action'])
+                    
+                    if len(info['action'].shape)> 0:
+                        action[ii] =  torch.Tensor(info['action'])
+                    else:
+                        action[ii] =  int(info['action'])
                     action_log_prob[ii] = 0
                     is_demos[ii] = 1
                 

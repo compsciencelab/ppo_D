@@ -20,6 +20,7 @@ class Policy(nn.Module):
         super(Policy, self).__init__()
         self.rnd = rnd
         self.gail = gail
+        self.continous = False
         if base_kwargs is None:
             base_kwargs = {}
 
@@ -37,6 +38,7 @@ class Policy(nn.Module):
         elif action_space.__class__.__name__ == "Box":
             num_outputs = action_space.shape[0]
             self.dist = DiagGaussian(self.base.output_size, num_outputs)
+            self.continous = True
         elif action_space.__class__.__name__ == "MultiBinary":
             num_outputs = action_space.shape[0]
             self.dist = Bernoulli(self.base.output_size, num_outputs)
