@@ -76,6 +76,20 @@ class Policy(nn.Module):
         dist_entropy = dist.entropy().mean() 
 
         return value, action, action_log_probs, rnn_hxs, dist_entropy
+    
+    def ract(self, inputs, rnn_hxs, masks, deterministic=False):
+        value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
+        dist = self.dist(actor_features)
+
+        if deterministic:
+            action = dist.mode()
+        else:
+            action = dist.rsample()
+
+        action_log_probs = dist.log_probs(action)
+        dist_entropy = dist.entropy().mean() 
+
+        return value, action, action_log_probs, rnn_hxs, dist_entropy
         
     def get_value(self, inputs, rnn_hxs, masks):
         value, _, _ = self.base(inputs, rnn_hxs, masks)

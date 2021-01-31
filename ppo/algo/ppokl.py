@@ -125,9 +125,10 @@ class PPOKL():
                     obs_batch, recurrent_hidden_states_batch, masks_batch,actions_batch)
             
                 if self.actor_critic.continous:
-                    _, action_ppo_bc, _, _, _ = self.actor_critic.act(
+                    # IMPORTANT .ract() is like act but differentiable it uses rsample() instead of sample()
+                    _, actions, _, _, _ = self.actor_critic.ract(
                     obs_batch, recurrent_hidden_states_batch, masks_batch)
-                    action_ppo_bc = action_ppo_bc[is_demo_batch.squeeze(1) == 1, :]
+                    action_ppo_bc = actions[is_demo_batch.squeeze(1) == 1, :]
 
                 if self.ppo_bc:
                     
@@ -190,12 +191,12 @@ class PPOKL():
                         if actions_batch_demo.shape[0] != 0:
                             BC_loss = loss(actions_prob_demo,actions_batch_demo.view(-1))
                         else:
-                            BC_loss = 0
+                            BC_loss = 0.0
                     else:
                         if actions_batch_demo.shape[0] != 0:
                             BC_loss = loss(action_ppo_bc, actions_batch_demo)
                         else:
-                            BC_loss = 0
+                            BC_loss = 0.0
               
                 if self.behaviour_cloning:
                     loss = BC_loss + value_loss * self.value_loss_coef
@@ -242,7 +243,7 @@ class PPOKL():
                         prob_exp = 0
                     disc_loss = -torch.mean(prob_pi + prob_exp)
                     loss += disc_loss
-                
+
                 self.optimizer.zero_grad()
                 loss.backward()
                 nn.utils.clip_grad_norm_(self.actor_critic.parameters(),
@@ -251,7 +252,7 @@ class PPOKL():
                 
                 if self.actor_critic.gail:
                     gail_loss_epoch += disc_loss.item()
-                if self.behaviour_cloning:
+                if self.behaviour_cloning or self.ppo_bc:
                     bc_loss_epoch += BC_loss.item()
                 value_loss_epoch += value_loss.item()
                 action_loss_epoch += action_loss.item()
