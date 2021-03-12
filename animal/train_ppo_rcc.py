@@ -20,15 +20,15 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) +'/..')
 from ppo import algo, utils
 from ppo.envs import make_vec_envs
 from ppo.model import Policy
-from ppo.model import CNNBase,FixupCNNBase,ImpalaCNNBase,StateCNNBase, MLPBase
+from ppo.model import CNNBase,FixupCNNBase,ImpalaCNNBase,StateCNNBase, MLPBase, MLPBaseTrifinger, MLPBaseTrifingerRNN
 from ppo.storage import RolloutStorage
 from ppo.algo.ppokl import ppo_rollout, ppo_update, ppo_save_model, ppo_rollout_imitate
-from bullet.make_pybullet_env import make_pybullet_env
+from trifinger_robot.make_trifinger_robot_env import make_trifinger_robot_env
 from vision_module import ImpalaCNNVision
-from object_detection_module import ImpalaCNNObject
-from wrappers import VecVisionState, VecObjectState 
+#from object_detection_module import ImpalaCNNObject
+#from wrappers import VecVisionState, VecObjectState 
 
-CNN={'CNN':CNNBase,'Impala':ImpalaCNNBase,'Fixup':FixupCNNBase,'State':StateCNNBase, 'MLP': MLPBase}
+CNN={'CNN':CNNBase,'Impala':ImpalaCNNBase,'Fixup':FixupCNNBase,'State':StateCNNBase, 'MLP': MLPBase, 'MLPTrifinger': MLPBaseTrifinger, 'MLPTrifingerRNN': MLPBaseTrifingerRNN}
 
 def main():
     args = get_args()
@@ -40,7 +40,7 @@ def main():
 
     utils.cleanup_log_dir(args.log_dir)
 
-    env_make = make_pybullet_env(args.task, log_dir = args.log_dir, frame_skip=args.frame_skip, info_keywords=('ereward','reward_woD'), base_seed=args.seed, rho=args.rho, phi=args.phi, demo_dir = args.demo_dir, size_buffer= args.size_buffer, size_buffer_V = args.size_buffer_V, threshold_reward=args.threshold_reward)
+    env_make = make_trifinger_robot_env( log_dir = args.log_dir, frame_skip=args.frame_skip, rho=args.rho, phi=args.phi, demo_dir = args.demo_dir, size_buffer= args.size_buffer, size_buffer_V = args.size_buffer_V, threshold_reward=args.threshold_reward)
     #spaces = ( gym.spaces.Box(low=0, high=0xff,shape=(3, 84, 84),dtype=np.uint8),
     #               gym.spaces.Discrete(9) )
     if args.cnn == 'State':

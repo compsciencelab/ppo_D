@@ -218,6 +218,7 @@ class PPOKL():
                     loss += kl_div * self.entropy_coef / len(self.actor_behaviors)
                 else:
                     loss +=  - dist_entropy * self.entropy_coef
+                    
                 if self.test:
                     loss = 0*loss
                 
