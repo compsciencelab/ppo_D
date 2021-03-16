@@ -37,7 +37,7 @@ def main():
 
     utils.cleanup_log_dir(args.log_dir)
     env_make = make_animal_env(log_dir = args.log_dir, inference_mode=args.realtime,  frame_skip=args.frame_skip , 
-            arenas_dir=args.arenas_dir, info_keywords=('ereward','max_reward','max_time','arena','reward_woD', 'len_real', 'min_value','max_value','mean_value', 'X', 'Y', 'Z','value', 'max_value_error'),
+            arenas_dir=args.arenas_dir, info_keywords=('ereward','max_reward','max_time','arena','reward_woD', 'len_real', 'min_value','max_value','mean_value', 'value', 'max_value_error'),
             reduced_actions=args.reduced_actions, seed=args.seed, state=args.state, rho=args.rho, phi=args.phi, record_actions = args.record_actions, demo_dir = args.demo_dir, size_buffer= args.size_buffer, size_buffer_V = args.size_buffer_V)
     
     #spaces = ( gym.spaces.Box(low=0, high=0xff,shape=(3, 84, 84),dtype=np.uint8),

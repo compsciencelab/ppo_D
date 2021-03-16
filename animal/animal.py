@@ -268,9 +268,6 @@ class LabAnimalReplayRecord(gym.Wrapper):
             self.len_real +=1
 
             vec_obs = info['vector_obs'].tolist()
-            self.positions['X'].append(round(vec_obs[0],3))
-            self.positions['Y'].append(round(vec_obs[1],3))
-            self.positions['Z'].append(round(vec_obs[2],3))
 
             info['action'] = 99
             self.max_value = max(self.max_value, info_in['value'][0])
@@ -304,10 +301,6 @@ class LabAnimalReplayRecord(gym.Wrapper):
         info['min_value'] = self.replayer.min_value
         info['max_value'] = self.replayer.max_value
         info['mean_value'] = self.replayer.mean_value
-        info['X'] = self.positions['X']
-        info['Y'] = self.positions['Y']
-        info['Z'] = self.positions['Z']
-
 
         if self.demo:
             info['demo_out'] = self.demo

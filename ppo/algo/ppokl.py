@@ -270,10 +270,10 @@ def ppo_rollout_imitate(num_steps, envs, actor_critic, rollouts, infos_in):
         action_ = (action, infos_in)
         obs, reward, done, infos = envs.step(action_)
 
-        if (step + 1) % 1000 == 0:
-            done = np.ones(done.shape, dtype=bool) 
-        else:
-            done = np.zeros(done.shape, dtype=bool) 
+        # if (step + 1) % 1000 == 0:
+        #     done = np.ones(done.shape, dtype=bool)
+        # else:
+        #     done = np.zeros(done.shape, dtype=bool)
 
         for info_in in infos_in:
             info_in["demo_in"] = []
