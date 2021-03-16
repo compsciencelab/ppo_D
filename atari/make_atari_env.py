@@ -7,11 +7,12 @@ import gym
 import sys
 import numpy as np
 import random
-import torch
 import glob
 import bisect 
 
-def make_atari_env(env_id, rho=0.1, phi=0.3, demo_dir= '', size_buffer=50, size_buffer_V=50, base_seed=0, log_dir=None, frame_skip=0, frame_stack=1, allow_early_resets=False, info_keywords = ('ereward'), threshold_reward=None, test=False):
+def make_atari_env(env_id, rho=0.1, phi=0.3, demo_dir= '', size_buffer=50, 
+                   size_buffer_V=50, base_seed=0, log_dir=None, frame_skip=0, 
+                   frame_stack=1, allow_early_resets=False, info_keywords=('ereward'), threshold_reward=None, test=False):
 
     def make_env(rank):
 
