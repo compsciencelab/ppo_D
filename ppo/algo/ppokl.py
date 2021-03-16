@@ -104,7 +104,7 @@ class PPOKL():
 
                 # Reshape to do in a single forward pass for all steps
                 values, action_log_probs, dist_entropy, _, dist_a = self.actor_critic.evaluate_actions(
-                    obs_batch, recurrent_hidden_states_batch, masks_batch,actions_batch)
+                    obs_batch, recurrent_hidden_states_batch, masks_batch, actions_batch)
 
                 if self.actor_critic.continous:
                     # IMPORTANT .ract() is like act but differentiable it uses rsample() instead of sample()
