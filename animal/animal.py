@@ -269,7 +269,8 @@ class LabAnimalReplayRecord(gym.Wrapper):
 
             vec_obs = info['vector_obs'].tolist()
 
-            info['action'] = 99
+            info['true_action'] = False
+            info['action'] = action
             self.max_value = max(self.max_value, info_in['value'][0])
             info['value'] = self.max_value 
             info['max_value_error'] = 0.0
@@ -278,7 +279,7 @@ class LabAnimalReplayRecord(gym.Wrapper):
 
             if (reward > -0.01) and (reward < 0):
                 reward = 0 # get rid of the time reward
-
+            info['true_action'] = True
             info['action'] = action
 
             if done:
