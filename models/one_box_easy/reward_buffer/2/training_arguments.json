@@ -1,0 +1,8 @@
+{
+    "recurrent_policy": true,
+    "frame_skip": 2,
+    "frame_stack": 4,
+    "cnn": "CNN",
+    "reduced_actions": false,
+    "latest_model": "animal_olympics.state_dict.2200.0"
+}
