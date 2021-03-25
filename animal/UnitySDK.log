@@ -1,53 +1,5 @@
-3/16/2021 6:10:18 PM
+3/18/2021 3:04:57 PM
  
-Exception: Object reference not set to an instance of an object
-PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
-
-Log
-configuration missing for arena 0
-
-Exception
-NullReferenceException: Object reference not set to an instance of an object
-PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
-
-Exception
-NullReferenceException: Object reference not set to an instance of an object
-PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
-
-Log
-configuration missing for arena 0
-
-Log
-configuration missing for arena 0
-
-Exception
-NullReferenceException: Object reference not set to an instance of an object
-PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
-
-Log
-configuration missing for arena 0
-
-Exception
-NullReferenceException: Object reference not set to an instance of an object
-PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
-
-Exception
-NullReferenceException: Object reference not set to an instance of an object
-PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
-
-Log
-configuration missing for arena 0
-
-Exception
-NullReferenceException: Object reference not set to an instance of an object
-PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
-
-Log
-configuration missing for arena 0
-
-Log
-configuration missing for arena 0
-
 Exception
 NullReferenceException: Object reference not set to an instance of an object
 PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
@@ -80,9 +32,6 @@ Exception
 NullReferenceException: Object reference not set to an instance of an object
 PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
 
-Log
-configuration missing for arena 0
-
 Exception
 NullReferenceException: Object reference not set to an instance of an object
 PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
@@ -94,15 +43,47 @@ Exception
 NullReferenceException: Object reference not set to an instance of an object
 PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
 
+Exception
+NullReferenceException: Object reference not set to an instance of an object
+PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
+
 Log
 configuration missing for arena 0
 
-Warning
-Releasing render texture that is set to be RenderTexture.active!
+Log
+configuration missing for arena 0
 
-Warning
-Releasing render texture that is set to be RenderTexture.active!
+Exception
+NullReferenceException: Object reference not set to an instance of an object
+PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
 
-Warning
-Releasing render texture that is set to be RenderTexture.active!
+Exception
+NullReferenceException: Object reference not set to an instance of an object
+PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
+
+Log
+configuration missing for arena 0
+
+Log
+configuration missing for arena 0
+
+Log
+configuration missing for arena 0
+
+Exception
+NullReferenceException: Object reference not set to an instance of an object
+PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
+
+Log
+configuration missing for arena 0
+
+Log
+configuration missing for arena 0
+
+Exception
+NullReferenceException: Object reference not set to an instance of an object
+PlayerControls.Start () (at <869af110e28e4aaf80ea011fa3429e5f>:0)
+
+Log
+configuration missing for arena 0
 
