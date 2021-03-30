@@ -1,11 +1,14 @@
 import os
 import gym
+import sys
+#import pybullet_envs
 import numpy as np
+import pybulletgym 
 from baselines import bench
 from ppo.envs import TransposeImage
 import random
+import torch
 import glob
-
 
 def make_pybullet_env(env_id, rho=0.1, phi=0.3, demo_dir='', size_buffer=50,
                       size_buffer_V=50, base_seed=0, log_dir=None,
@@ -353,7 +356,7 @@ class LabBulletReplayRecord(gym.Wrapper):
         self.actions_rollouts = []
         self.value_rollouts = []
 
-        # replay = self.replayer.reset()
+        replay = self.replayer.reset()
 
         if self.demo:
             self.replayer.add_demo(self.demo)
