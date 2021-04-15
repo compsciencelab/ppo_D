@@ -37,6 +37,12 @@ gym.envs.register(
                 reward_threshold=18.0,
                 )
 
+gym.envs.register(
+                id='SparseLunarLander-v1',
+                entry_point='bullet.sparse_lunar_lander:LunarLanderSparse',
+                max_episode_steps=300,
+                reward_threshold=200,)
+
 def main():
     args = get_args()
 
