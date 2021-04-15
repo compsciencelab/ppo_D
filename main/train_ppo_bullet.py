@@ -30,6 +30,13 @@ from wrappers import VecVisionState, VecObjectState
 
 CNN={'CNN':CNNBase,'Impala':ImpalaCNNBase,'Fixup':FixupCNNBase,'State':StateCNNBase, 'MLP': MLPBase}
 
+gym.envs.register(
+                id='SparseReacher-v1',
+                entry_point='bullet.sparse_reacher:SparseReacherBulletEnv',
+                max_episode_steps=150,
+                reward_threshold=18.0,
+                )
+
 def main():
     args = get_args()
 
