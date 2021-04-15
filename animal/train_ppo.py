@@ -21,7 +21,7 @@ from ppo.model import Policy
 from ppo.model import CNNBase,FixupCNNBase,ImpalaCNNBase,StateCNNBase
 from ppo.storage import RolloutStorage
 from ppo.algo.ppokl import ppo_rollout, ppo_update, ppo_save_model,ppo_rollout_RND, ppo_rollout_imitate
-from animal import make_animal_env
+from animal.make_animal_env import make_animal_env
 from vision_module import ImpalaCNNVision
 from object_detection_module import ImpalaCNNObject
 from wrappers import VecVisionState, VecObjectState 
