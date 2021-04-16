@@ -1,7 +1,9 @@
 Official implementation of the paper "Guided Exploration with Proximal PolicyOptimization using a Single Demonstration" https://arxiv.org/pdf/2007.03328.pdf
 
 Create new conda environment with requirements.txt
+
 cd ppo_D
+
 mkdir RUNS
 
 Test run for sparse lunar lander
