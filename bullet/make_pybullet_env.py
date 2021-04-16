@@ -15,9 +15,6 @@ def make_pybullet_env(env_id, rho=0.1, phi=0.3, demo_dir='', size_buffer=50,
                       frame_skip=0, frame_stack=1, allow_early_resets=False,
                       info_keywords=('ereward'), threshold_reward=None):
 
-    """[summary]
-    """
-
     def make_env(rank):
 
         if not os.path.isdir(log_dir):
@@ -52,14 +49,20 @@ def make_pybullet_env(env_id, rho=0.1, phi=0.3, demo_dir='', size_buffer=50,
 
 class ReplayAll():
     def __init__(self, rho, phi, demo_dir, size_buffer, size_buffer_V):
-        """[summary]
+        
+        """[At the beginning of each trajectory a decision is being made 
+            from where to sample the next trajectory. The wrapper keeps a buffer of the human
+            demonstrations, successful trajectories and trajectories with high maximum value. 
+            There are as many such buffers as there are workers/environments. The buffers syncronize their
+            content periodically]
 
         Args:
-            rho ([type]): [description]
-            phi ([type]): [description]
-            demo_dir ([type]): [description]
-            size_buffer ([type]): [description]
-            size_buffer_V ([type]): [description]
+            rho ([Float]): [Probability of sampling a trajectory from the human demonstrations or recorded 
+            successful trajectories]
+            phi ([Float]): [Probability of sampling a trajectory from the value buffer trajectories]
+            demo_dir ([string]): [path with the recorded human trajectories]
+            size_buffer ([Int]): [maximum size of the the buffer of recorded successful trajectories ]
+            size_buffer_V ([Int]): [maximum size of the the value buffer]
         """
         self.rho = rho
         self.phi = phi
@@ -225,6 +228,25 @@ class ReplayAll():
 class LabBulletReplayRecord(gym.Wrapper):
     def __init__(self, env, rho, phi, demo_dir, size_buffer, size_buffer_V,
                  threshold_reward):
+        """[ This is a wrapper of the gym environment, with given probabilities phi and rho it ignores 
+            the tuples (action, obs, reward) from the real environment and replaces with the tuples 
+            from the demonstrations. This class takes care of the recording of good 
+            trajectories,  which are then passed to the ReplayAll class. It takes care of monitoring
+            some meterics like the cumulative rewards for episode. It also takes care of syncronizing 
+            buffers across workers. ]
+
+        Args:
+            
+            env ([type]): [The original gym environment]
+            rho ([Float]): [Probability of sampling a trajectory from the human demonstrations or recorded 
+            successful trajectories]
+            phi ([Float]): [Probability of sampling a trajectory from the value buffer trajectories]
+            demo_dir ([string]): [path with the recorded human trajectories]
+            size_buffer ([Int]): [maximum size of the the buffer of recorded successful trajectories ]
+            size_buffer_V ([Int]): [maximum size of the the value buffer]
+            threshold_reward ([Float]): [Only records trajectories with a cumulative reward that is higher 
+            than threshold_reward ]
+        """
 
         gym.Wrapper.__init__(self, env)
         self.obs_rollouts = []

@@ -70,6 +70,22 @@ def make_animal_env(log_dir, inference_mode, frame_skip, arenas_dir,
 
 class ReplayAll():
     def __init__(self, arenas, rho, phi, demo_dir, size_buffer, size_buffer_V):
+        
+        """[At the beginning of each trajectory a decision is being made 
+            from where to sample the next trajectory. The wrapper keeps a buffer of the human
+            demonstrations, successful trajectories and trajectories with high maximum value. 
+            There are as many such buffers as there are workers/environments. The buffers syncronize their
+            content periodically]
+
+        Args:
+            rho ([Float]): [Probability of sampling a trajectory from the human demonstrations or recorded 
+            successful trajectories]
+            phi ([Float]): [Probability of sampling a trajectory from the value buffer trajectories]
+            demo_dir ([string]): [path with the recorded human trajectories]
+            size_buffer ([Int]): [maximum size of the the buffer of recorded successful trajectories ]
+            size_buffer_V ([Int]): [maximum size of the the value buffer]
+        """
+        
         self.rho = rho
         self.phi = phi
         self.phi_ = phi
@@ -226,6 +242,28 @@ class ReplayAll():
 
 
 class LabAnimalReplayRecord(gym.Wrapper):
+    
+        """[ This is a wrapper of the gym environment, with given probabilities phi and rho it ignores 
+        the tuples (action, obs, reward) from the real environment and replaces with the tuples 
+        from the demonstrations. This class takes care of the recording of good 
+        trajectories,  which are then passed to the ReplayAll class. It takes care of monitoring
+        some meterics like the cumulative rewards for episode. It also takes care of syncronizing 
+        buffers across workers. ]
+
+        Args:
+            
+            env ([type]): [The original gym environment]
+            rho ([Float]): [Probability of sampling a trajectory from the human demonstrations or recorded 
+            successful trajectories]
+            phi ([Float]): [Probability of sampling a trajectory from the value buffer trajectories]
+            demo_dir ([string]): [path with the recorded human trajectories]
+            size_buffer ([Int]): [maximum size of the the buffer of recorded successful trajectories ]
+            size_buffer_V ([Int]): [maximum size of the the value buffer]
+            threshold_reward ([Float]): [Only records trajectories with a cumulative reward that is higher 
+            than threshold_reward ]
+        """
+        
+        
     def __init__(self, env, arenas_dir, rho, phi, demo_dir, size_buffer, size_buffer_V):
         gym.Wrapper.__init__(self, env)
         if os.path.isdir(arenas_dir):
@@ -407,73 +445,6 @@ def set_reward_arena(arena, force_new_size = False):
     goodmultis.sort()
     return tot_reward
 
-
-class LabAnimalReplayAll(gym.Wrapper):
-    def __init__(self, env, arenas_dir, replay_ratio, demo_dir):
-        gym.Wrapper.__init__(self, env)
-        if os.path.isdir(arenas_dir):
-            files = glob.glob("{}/*/*.yaml".format(arenas_dir)) + glob.glob("{}/*.yaml".format(arenas_dir))
-            
-        else:
-            #assume is a pattern
-            files = glob.glob(arenas_dir)
-        
-        self.env_list = [(f,ArenaConfig(f)) for f in files]
-        self._arena_file = ''
-        self.replayer = ReplayAll(replay_ratio,files, demo_dir)
-        self.performance_tracker = np.zeros(1000)
-        self.n_arenas = 0
-
-    def step(self, action):
-        out =self.replayer.replay_step(action)
-        info = {}
-        if len(out) == 1:
-            obs, reward, done, info = self.env.step(action)
-            if (reward > -0.01 ) and (reward < 0):
-                reward = 0 # get rid of the time reward
-            
-            self.env_reward_no_D += reward
-            info['action'] = 99
-        else:
-            action, obs, reward, done = out
-            
-            if (reward > -0.01 ) and (reward < 0):
-                reward = 0 # get rid of the time reward
-        
-            info['action'] = action
-                  
-        self.steps += 1
-
-        self.env_reward += reward
-        info['arena']=self._arena_file  #for monitor
-        info['max_reward']=self.max_reward
-        info['max_time']=self.max_time
-        info['ereward'] = self.env_reward
-        info['reward_woD'] = self.env_reward_no_D
-        if done:
-            self.performance_tracker[self.n_arenas % 1000] = max(self.env_reward_no_D, 0)/self.max_reward
-
-        return obs, reward, done, info        
-
-    def reset(self, **kwargs):
-        self.n_arenas += 1
-        self.steps = 0
-        self.env_reward = 0
-        self.env_reward_no_D = 0
-        
-        """  while True:
-            self._arena_file, arena = random.choice(self.env_list)
-            replay = self.replayer.reset(self._arena_file)
-            if replay:
-                break """
-        self._arena_file, arena = random.choice(self.env_list)
-
-        average_performance = np.average(self.performance_tracker)
-        replay = self.replayer.reset(self._arena_file, average_performance)
-#        self.max_reward = analyze_arena(arena)
-        self.max_reward = set_reward_arena(arena, force_new_size=False)
-        self.max_time = arena.arenas[0].t
-        return self.env.reset(arenas_configurations=arena,**kwargs)    
 
 class LabAnimal(gym.Wrapper):
     def __init__(self, env, arenas_dir, replay_ratio):
