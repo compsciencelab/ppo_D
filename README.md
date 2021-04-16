@@ -1,8 +1,9 @@
-# animal-ppo
+Official implementation of the paper "Guided Exploration with Proximal PolicyOptimization using a Single Demonstration" https://arxiv.org/pdf/2007.03328.pdf
 
-## To make videos
+Test run for sparse lunar lander
 
-```
-  ffmpeg -video_size 1280x720 -framerate 25 -f x11grab -i :0.0+1289,766 output.mp4
-```
-# ppo_D_pubblic
+python train_ppo_bullet.py --seed 16 --device 'cuda:0' --use-gae --lr 2e-4 --clip-param 0.2 --value-loss-coef 0.3 --num-processes 12 --num-steps 2048 --num-mini-batch 32 --entropy-coef 0.02 --num-env-steps 60000000 --log-dir ../RUNS/exp_lunar_lander_1 --frame-stack 1  --cnn MLP  --gamma 0.99 --save-interval 50 --gae-lambda 0.95 --ppo-epoch 10 --state-stack 16 --rho 0.1 --phi 0.0  --size-buffer 50 --size-buffer-V 0 --demo-dir ../datasets/sparse_lunar_lander/recordings/ --threshold-reward 0.0 --task 'SparseLunarLander-v1'
+
+Test run for sparse reacher
+python train_ppo_bullet.py --seed 42 --device 'cuda:0' --use-gae --lr 2e-4 --clip-param 0.2 --value-loss-coef 0.3 --num-processes 64 --num-steps 2048 --num-mini-batch 32 --entropy-coef 0.02 --num-env-steps 500000000 --log-dir ../RUNS/exp_reacher_1 --frame-stack 1  --cnn MLP  --gamma 0.99   --save-interval 50 --gae-lambda 0.95 --ppo-epoch 10 --state-stack 16 --rho 0.3 --phi 0.0  --size-buffer 40 --size-buffer-V 0 --demo-dir ../datasets/sparse_reacher/recorded_reacher_threshold_1_10 --threshold-reward 0.001 --task 'SparseReacher-v1'
+
