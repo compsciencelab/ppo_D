@@ -1,3 +1,8 @@
+# MOVED
+
+We have implemented PPO+D into PytorchRL [https://github.com/PyTorchRL/pytorchrl where is mantained. This reposotory is no longer used.
+
+# Deprected
 Official implementation of the paper "Guided Exploration with Proximal PolicyOptimization using a Single Demonstration" https://arxiv.org/pdf/2007.03328.pdf
 
 Create new conda environment with requirements.txt
